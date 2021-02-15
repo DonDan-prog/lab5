@@ -6,7 +6,7 @@ public class Mandelbrot extends FractalGenerator
 
     public String toString()
     {
-        return new String("Mandelbrot Set");
+        return "Mandelbrot Set";
     }
 
 

@@ -5,7 +5,7 @@ import java.awt.*;
 public class JImageDisplay extends JComponent
 {
     /** Image buffer for holding picture */
-    private BufferedImage image;
+    public BufferedImage image;
 
     /** Constructor of image */
     JImageDisplay(int w, int h)

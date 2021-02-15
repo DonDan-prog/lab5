@@ -1,7 +1,12 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.FileFilter;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class FractalExplorer 
 {
@@ -24,6 +29,55 @@ public class FractalExplorer
     /** Range of fractal */
     private Rectangle2D.Double range;
 
+    private class AppListener implements ActionListener
+    {
+        private String action;
+
+        AppListener(String action) { this.action = action; }
+
+        public void actionPerformed(ActionEvent e)
+        {
+            if(action == "choose")
+            {
+                fractalGenerator = (FractalGenerator)((JComboBox)e.getSource()).getSelectedItem();
+                drawFractal();
+            }
+            else if(action == "reset")
+            {
+                imageDisplay.clearImage();
+                fractalGenerator.getInitialRange(range);
+                drawFractal();
+            }
+            else if(action == "save")
+            {
+                File choosedFile = null;
+
+                JFileChooser fileChooser = new JFileChooser();
+
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("PNG Images", "png");
+                fileChooser.setFileFilter(filter);
+                fileChooser.setAcceptAllFileFilterUsed(false);
+
+                Component parentComponent = ((Component)e.getSource()).getParent().getParent(); // dreadful, there's MUST be something better
+                int result = fileChooser.showSaveDialog(parentComponent); 
+                if(result != JFileChooser.APPROVE_OPTION)
+                {
+                    return;
+                }
+                else
+                {
+                    choosedFile = fileChooser.getSelectedFile();
+                    try 
+                    {
+                        ImageIO.write(imageDisplay.image, "png", choosedFile);
+                    } catch (Exception exception) 
+                    {
+                        JOptionPane.showMessageDialog(parentComponent, "Exception occured while saving image: " + exception.getMessage(), "Cannot save image", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        }
+    }
     /** Class for handle mouse actions */
     private class ClickHandler implements MouseListener
     {
@@ -86,22 +140,39 @@ public class FractalExplorer
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Container contentPane = frame.getContentPane();
+
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout());
+        JLabel label = new JLabel("Fractal: ");
+        
+        JComboBox<FractalGenerator> fractals = new JComboBox<>();
+        fractals.addItem(new Mandelbrot());
+        fractals.addItem(new BurningShip());
+        fractals.addItem(new Tricorn());
+
+        fractals.addActionListener(new AppListener("choose"));
+
+        topPanel.add(label);
+        topPanel.add(fractals);
+
+        JPanel botPanel = new JPanel();
+        botPanel.setLayout(new GridLayout());
+
+        JButton saveImage = new JButton("Save image");
+        saveImage.addActionListener(new AppListener("save"));
+        JButton resetButton = new JButton("Reset display");
+        resetButton.addActionListener(new AppListener("reset"));
+
+        botPanel.add(saveImage);
+        botPanel.add(resetButton);
+
         contentPane.setLayout(new BorderLayout());
 
         imageDisplay.addMouseListener(new ClickHandler());
 
-        JButton resetButton = new JButton("Reset display");
-        resetButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e)
-            {
-                imageDisplay.clearImage();
-                fractalGenerator.getInitialRange(range);
-                drawFractal();
-            }
-        });
-
-        contentPane.add(imageDisplay, BorderLayout.NORTH);
-        contentPane.add(resetButton, BorderLayout.SOUTH);
+        contentPane.add(topPanel, BorderLayout.NORTH);
+        contentPane.add(imageDisplay, BorderLayout.CENTER);
+        contentPane.add(botPanel, BorderLayout.SOUTH);
 
         frame.pack();
         frame.setVisible(true);

@@ -65,5 +65,8 @@ public abstract class FractalGenerator
      * with a result of -1.
      */
     public abstract int numIterations(double x, double y);
+
+    /** Abstract method to get string representation */
+    public abstract String toString();
 }
 
